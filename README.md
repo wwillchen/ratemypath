@@ -1,5 +1,9 @@
 # RateMyPath
 
+**Video Demo:**
+https://github.com/wwillchen/ratemypath/assets/107781106/9cbaccf6-52ce-44df-b732-bb4971c285c3
+
+
 **RateMyPath** is an innovative, user-friendly application tailored specifically for Duke University students. Our goal is to empower students with the tools they need to make informed and strategic decisions about their course selections.
 
 ### Quick Links
