@@ -24,6 +24,7 @@ import {
   Divider,
   Spacer,
   Select,
+  Input,
 } from '@chakra-ui/react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -75,7 +76,6 @@ const Subject = ({ code }: { code: string }) => {
   if (error) return <Heading>Error Ocurred</Heading>;
   if (data.error) return <Heading>{JSON.stringify(data.error)}</Heading>;
   console.log(data);
-
   // Get all unique values of Areas of knowledge and modes of inquiry
   const allAoks = [...new Set(data.data.flatMap((v: CourseData) => v.aok))];
   const allMoiqs = [...new Set(data.data.flatMap((v: CourseData) => v.moiq))];
@@ -250,11 +250,10 @@ const Subject = ({ code }: { code: string }) => {
                     <Text my={1}>
                       <strong>Modes of Inquiry</strong>: {i.moiq.join(', ')}
                     </Text>
-                    <Text fontWeight="bold" my={1}>
+                    <Text fontWeight="bold" mt={0} mb={0}>
                       Ratings
                     </Text>
-                    <Divider />
-                    <TableContainer>
+                    <TableContainer mt={0}>
                       <Table variant="simple">
                         <Thead>
                           <Tr>

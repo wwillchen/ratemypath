@@ -12,6 +12,7 @@ import {
   Spinner,
   Spacer,
   Select,
+  Input,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import useSWR from 'swr';
@@ -27,6 +28,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const Instructors = () => {
   const [subj, setSubj] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>(''); 
   const { data, error, isLoading } = useSWR('/api/get_instructors', fetcher);
 
   if (isLoading) return <Spinner size="xl" colorScheme="blue" />;
@@ -41,7 +43,6 @@ const Instructors = () => {
     <Flex
       direction="column"
       alignItems="center"
-      // justifyContent="center"
       gap={4}
       mb={8}
       w="full"
@@ -52,6 +53,11 @@ const Instructors = () => {
             Duke Instructors
           </Heading>
           <Spacer />
+          <Input
+            placeholder="Search for instructor"
+            onChange={(e) => setSearchTerm(e.target.value)} // Update the search term when the input changes
+            maxW={{ base: '100%', md: '20%' }}
+          />
           <Select
             onChange={(e) => {
               setSubj(e.target.value);
@@ -67,10 +73,10 @@ const Instructors = () => {
           </Select>
         </Flex>
         <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }}>
-          {inData
+        {inData
             .filter((i: SubjectDB) => {
-              // Check if selectedSubject is null or matches the subject of the instructor
-              return subj === null || subj === 'Select' || i.subject === subj;
+              // Check if selectedSubject is null or matches the subject of the instructor     // And check if the instructor
+              return (subj === null || subj === 'Select' || i.subject === subj) && i.instructor.toLowerCase().includes(searchTerm.toLowerCase());
             })
             .map((i: SubjectDB, n: number) => {
               return (
