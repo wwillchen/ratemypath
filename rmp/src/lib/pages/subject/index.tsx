@@ -29,7 +29,7 @@ import {
   Stack,
 } from '@chakra-ui/react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 // import { FaSearch } from 'react-icons/fa';
 
@@ -68,16 +68,72 @@ const Subject = ({ code }: { code: string }) => {
   const [selectedMoiq, setSelectedMoiq] = useState('');
   const [hoursFilter, setHoursFilter] = useState(0);
   const [difficultyFilter, setDifficultyFilter] = useState(0);
+  const [topRatedCourse, setTopRatedCourse] = useState<CourseData | null>(null);
+  const [topRatedInstructor, setTopRatedInstructor] = useState<string | null>(null);
+  const [averageRating, setAverageRating] = useState<number | null>(null);
 
   const { data, error, isLoading } = useSWR(
     `/api/get_classes?code=${code}&term=${term}`,
     fetcher
   );
 
+  // Calculate analytics data when new data is fetched
+  useEffect(() => {
+    if (data) {
+      console.log('Fetched data:', data);
+      // Find top rated course
+      const topCourse = data.data.reduce((prev, current) => {
+        return (prev.data[0].course_rating > current.data[0].course_rating) ? prev : current;
+      });
+      setTopRatedCourse(topCourse);
+
+      // Find top rated instructor
+      const instructorRatings = data.data.reduce((acc, course) => {
+        course.data.forEach(review => {
+          review.instructor.forEach(instructor => {
+            if (!acc[instructor]) {
+              acc[instructor] = [];
+            }
+            acc[instructor].push(review.instructor_score);
+          });
+        });
+        return acc;
+      }, {} as {[key: string]: number[]});
+      const topInstructor = Object.keys(instructorRatings).reduce((prev, current) => {
+        const prevAvg = instructorRatings[prev].reduce((a, b) => a + b, 0) / instructorRatings[prev].length;
+        const currentAvg = instructorRatings[current].reduce((a, b) => a + b, 0) / instructorRatings[current].length;
+        return (prevAvg > currentAvg) ? prev : current;
+      });
+      setTopRatedInstructor(topInstructor);
+
+      // Calculate average rating
+      const totalRating = data.data.reduce((acc, course) => {
+        // Ensure course.data[0].course_rating is a number before adding to accumulator
+        const rating = Number(course.data[0].course_rating);
+        if (isNaN(rating)) {
+          console.log('Invalid rating:', course.data[0].course_rating, 'for course:', course);
+        }
+        return isNaN(rating) ? acc : acc + rating;
+      }, 0);
+
+      const validRatingsCount = data.data.reduce((acc, course) => {
+        // Only count ratings that are numbers
+        return isNaN(Number(course.data[0].course_rating)) ? acc : acc + 1;
+      }, 0);
+
+      if (validRatingsCount === 0) {
+        console.log('No valid ratings found in data:', data);
+      }
+
+      const avgRating = totalRating / validRatingsCount;
+      console.log('Calculated average rating:', avgRating);
+      setAverageRating(avgRating);
+    }
+  }, [data]);
+
   if (isLoading) return <Spinner size="xl" colorScheme="blue" />;
   if (error) return <Heading>Error Ocurred</Heading>;
   if (data.error) return <Heading>{JSON.stringify(data.error)}</Heading>;
-  console.log(data);
   // Get all unique values of Areas of knowledge and modes of inquiry
   const allAoks = [...new Set(data.data.flatMap((v: CourseData) => v.aok))];
   const allMoiqs = [...new Set(data.data.flatMap((v: CourseData) => v.moiq))];
@@ -105,6 +161,10 @@ const Subject = ({ code }: { code: string }) => {
       mb={8}
       w="full"
     >
+      <Text>Top Rated Course: {topRatedCourse ? `${topRatedCourse.subject} ${topRatedCourse.catalog}` : 'Loading...'}</Text>
+      <Text>Top Rated Instructor: {topRatedInstructor || 'Loading...'}</Text>
+      <Text>Average Course Rating: {averageRating ? averageRating.toFixed(2) : 'Loading...'}</Text>
+      <Divider />
       <Box>
         <Flex my={3}>
           <Heading display={isLoading ? 'none' : 'flex'}>
