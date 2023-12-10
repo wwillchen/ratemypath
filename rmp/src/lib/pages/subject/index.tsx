@@ -60,6 +60,11 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const Subject = ({ code }: { code: string }) => {
   const [term, SetTerm] = useState(8806);
   const [ratingFilter, SetRatingFilter] = useState(0);
+  const [displayRating, setDisplayRating] = useState(0);
+  const [selectedAok, setSelectedAok] = useState('');
+  const [selectedMoiq, setSelectedMoiq] = useState('');
+  const [hoursFilter, setHoursFilter] = useState(0);
+  const [difficultyFilter, setDifficultyFilter] = useState(0);
 
   const { data, error, isLoading } = useSWR(
     `/api/get_classes?code=${code}&term=${term}`,
@@ -71,8 +76,22 @@ const Subject = ({ code }: { code: string }) => {
   if (data.error) return <Heading>{JSON.stringify(data.error)}</Heading>;
   console.log(data);
 
+  // Get all unique values of Areas of knowledge and modes of inquiry
+  const allAoks = [...new Set(data.data.flatMap((v: CourseData) => v.aok))];
+  const allMoiqs = [...new Set(data.data.flatMap((v: CourseData) => v.moiq))];
+  // Max floor values for quantitative filters
+  const maxHours = Math.floor(Math.max(...data.data.map((v: CourseData) => v.data[0].hours)));
+  const maxDifficulty = Math.floor(Math.max(...data.data.map((v: CourseData) => v.data[0].difficulty)));
+  const maxRating = Math.floor(Math.max(...data.data.map((v: CourseData) => v.data[0].course_rating)));
+  
+  // Construct filter to Union
   const newData = data.data.filter(
-    (v: CourseData) => v.data[0].course_rating > ratingFilter
+    (v: CourseData) =>
+      v.data[0].course_rating > ratingFilter &&
+      v.data[0].hours > hoursFilter &&
+      v.data[0].difficulty > difficultyFilter &&
+      (selectedAok === '' || v.aok.includes(selectedAok)) &&
+      (selectedMoiq === '' || v.moiq.includes(selectedMoiq))
   );
 
   return (
@@ -117,25 +136,93 @@ const Subject = ({ code }: { code: string }) => {
               <Slider
                 colorScheme="blue"
                 onChange={(e) => {
-                  console.log(e);
                   SetRatingFilter(e);
+                  setDisplayRating(e);
                 }}
                 defaultValue={0}
                 min={0}
-                max={5}
+                max={maxRating}
                 step={1}
               >
                 <SliderTrack>
                   <SliderFilledTrack />
                 </SliderTrack>
                 <SliderThumb boxSize={4}>
-                  <Box>{ratingFilter}</Box>
+                  <Box>{displayRating}</Box>
                 </SliderThumb>
               </Slider>
             </Box>
+            <Box p={1} my={2}>
+              <Text fontWeight="bold">Hours per Week</Text>
+              <Slider
+                colorScheme="blue"
+                onChange={(e) => {
+                  setHoursFilter(e);
+                }}
+                defaultValue={0}
+                min={0}
+                max={maxHours}
+                step={1}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb boxSize={4}>
+                  <Box>{hoursFilter}</Box>
+                </SliderThumb>
+              </Slider>
+            </Box>
+            <Box p={1} my={2}>
+              <Text fontWeight="bold">Difficulty</Text>
+              <Slider
+                colorScheme="blue"
+                onChange={(e) => {
+                  setDifficultyFilter(e);
+                }}
+                defaultValue={0}
+                min={0}
+                max={maxDifficulty}
+                step={1}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb boxSize={4}>
+                  <Box>{difficultyFilter}</Box>
+                </SliderThumb>
+              </Slider>
+            </Box>
+            <Box p={1} my={2}>
+              <Text fontWeight="bold">Area of Knowledge</Text>
+              <Select
+                onChange={(e) => {
+                  setSelectedAok(e.target.value);
+                }}
+              >
+                {allAoks.map((aok) => (
+                  <option value={aok}>{aok}</option>
+                ))}
+              </Select>
+            </Box>
+            <Box p={1} my={2}>
+              <Text fontWeight="bold">Mode of Inquiry</Text>
+              <Select
+                onChange={(e) => {
+                  setSelectedMoiq(e.target.value);
+                }}
+              >
+                {allMoiqs.map((moiq) => (
+                  <option value={moiq}>{moiq}</option>
+                ))}
+              </Select>
+            </Box>
           </Flex>
           <SimpleGrid columns={{ base: 1, sm: 2, md: 2, lg: 2 }}>
-            {newData.map((i: CourseData) => {
+            {/* display no courses found if no courses */}
+            {newData.length === 0 ? (
+              <Text>Sorry, no courses found. Please set new filter values.</Text>
+            ) : (
+              newData.map((i: CourseData) => {
               return (
                 <Link href={`/course/${i.id}`}>
                   <Flex
@@ -156,6 +243,12 @@ const Subject = ({ code }: { code: string }) => {
                     <Text my={1}>
                       <strong>Instructors</strong>:{' '}
                       {Array.from(new Set(i.data[0].instructor)).join(', ')}
+                    </Text>
+                    <Text my={1}>
+                      <strong>Areas of Knowledge</strong>: {i.aok.join(', ')}
+                    </Text>
+                    <Text my={1}>
+                      <strong>Modes of Inquiry</strong>: {i.moiq.join(', ')}
                     </Text>
                     <Text fontWeight="bold" my={1}>
                       Ratings
@@ -197,7 +290,8 @@ const Subject = ({ code }: { code: string }) => {
                   </Flex>
                 </Link>
               );
-            })}
+            })
+            )}
           </SimpleGrid>
         </Flex>
       </Box>
