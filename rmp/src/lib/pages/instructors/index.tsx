@@ -91,8 +91,8 @@ const Instructors = () => {
                   key={n}
                 >
                   <Heading>{i.instructor}</Heading>
-                  <Text>{i.subject}</Text>
-                  <Text>{i.score}</Text>
+                  <Text>Subject: {i.subject}</Text>
+                  <Text>Average Course Rating: {i.score}</Text>
                 </Flex>
               );
             })}
