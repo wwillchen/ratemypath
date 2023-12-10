@@ -82,6 +82,9 @@ const Header = () => {
                 <Button onClick={() => signOut()} w="full" variant="ghost">
                   Sign Out
                 </Button>
+                <Link href="/comments">
+                  <Button variant="ghost">Comments</Button>
+                </Link>
                 <Text>{session.user.email}</Text>
               </>
             )}
