@@ -24,7 +24,9 @@ import {
   Divider,
   Spacer,
   Select,
-  Input,
+  Checkbox,
+  CheckboxGroup,
+  Stack,
 } from '@chakra-ui/react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -90,8 +92,8 @@ const Subject = ({ code }: { code: string }) => {
       v.data[0].course_rating > ratingFilter &&
       v.data[0].hours > hoursFilter &&
       v.data[0].difficulty > difficultyFilter &&
-      (selectedAok === '' || v.aok.includes(selectedAok)) &&
-      (selectedMoiq === '' || v.moiq.includes(selectedMoiq))
+      (selectedAok.length === 0 || selectedAok.every(aok => v.aok.includes(aok))) &&
+      (selectedMoiq.length === 0 || selectedMoiq.every(moiq => v.moiq.includes(moiq)))
   );
 
   return (
@@ -192,29 +194,37 @@ const Subject = ({ code }: { code: string }) => {
                 </SliderThumb>
               </Slider>
             </Box>
-            <Box p={1} my={2}>
+            <Box p={1} my={2} overflowY="auto" maxH="200px"> 
               <Text fontWeight="bold">Area of Knowledge</Text>
-              <Select
-                onChange={(e) => {
-                  setSelectedAok(e.target.value);
+              <CheckboxGroup
+                colorScheme="blue"
+                defaultValue={[]}
+                onChange={(values) => {
+                  setSelectedAok(values as string[]);
                 }}
               >
-                {allAoks.map((aok) => (
-                  <option value={aok}>{aok}</option>
-                ))}
-              </Select>
+                <Stack direction="column" spacing={4}>
+                  {allAoks.map((aok) => (
+                    <Checkbox value={aok} size="sm">{aok}</Checkbox>
+                  ))}
+                </Stack>
+              </CheckboxGroup>
             </Box>
-            <Box p={1} my={2}>
+            <Box p={1} my={2} overflowY="auto" maxH="200px"> 
               <Text fontWeight="bold">Mode of Inquiry</Text>
-              <Select
-                onChange={(e) => {
-                  setSelectedMoiq(e.target.value);
+              <CheckboxGroup
+                colorScheme="blue"
+                defaultValue={[]}
+                onChange={(values) => {
+                  setSelectedMoiq(values as string[]);
                 }}
               >
-                {allMoiqs.map((moiq) => (
-                  <option value={moiq}>{moiq}</option>
-                ))}
-              </Select>
+                <Stack direction="column" spacing={4}>
+                  {allMoiqs.map((moiq) => (
+                    <Checkbox value={moiq} size="sm">{moiq}</Checkbox> 
+                  ))}
+                </Stack>
+              </CheckboxGroup>
             </Box>
           </Flex>
           <SimpleGrid columns={{ base: 1, sm: 2, md: 2, lg: 2 }}>
