@@ -28,6 +28,7 @@ import {
 import useSWR from 'swr';
 // import { FaSearch } from 'react-icons/fa';
 
+// Define the types for the data returned from the API
 type Review = {
   term: number;
   instructor: string[];
@@ -57,20 +58,25 @@ type SemMapType = {
   [key: number]: string;
 };
 
+// Map term numbers to human-readable semester names
 const semMap: SemMapType = {
   8806: 'Spring 2023',
   8526: 'Fall 2022',
 };
-
+// Define a function to fetch data from the API
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const Random = () => {
+  // Use the useSWR hook to fetch data from the API
   const { data, error, isLoading } = useSWR(`/api/get_random`, fetcher);
 
   if (isLoading) return <Spinner size="xl" colorScheme="blue" />;
   if (error) return <Heading>Error Ocurred</Heading>;
   if (data.error) return <Heading>{JSON.stringify(data.error)}</Heading>;
+
   const subj: CourseData = data.data[0];
+  
+  // Create a list of unique instructors
   const instructors: string[] = [];
   subj.data.forEach((i: Review) => {
     instructors.push(...i.instructor);

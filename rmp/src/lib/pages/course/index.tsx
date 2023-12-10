@@ -28,6 +28,7 @@ import {
 import useSWR from 'swr';
 // import { FaSearch } from 'react-icons/fa';
 
+// Type definitions
 type Review = {
   term: number;
   instructor: string[];
@@ -56,23 +57,28 @@ type CourseData = {
 type SemMapType = {
   [key: number]: string;
 };
-
+// Mapping from term numbers to term names
 const semMap: SemMapType = {
   8806: 'Spring 2023',
   8526: 'Fall 2022',
 };
 
+// Fetcher function for useSWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+// Course component
 const Course = ({ id }: { id: string }) => {
   const { data, error, isLoading } = useSWR(
     `/api/get_course?id=${id}`,
     fetcher
   );
 
+  // Handling loading, error, and data error states
   if (isLoading) return <Spinner size="xl" colorScheme="blue" />;
   if (error) return <Heading>Error Ocurred</Heading>;
   if (data.error) return <Heading>{JSON.stringify(data.error)}</Heading>;
+  
+  // Processing fetched data
   const subj: CourseData = data.data[0];
   const instructors: string[] = [];
   console.log(subj.data);

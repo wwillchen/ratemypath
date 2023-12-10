@@ -27,17 +27,21 @@ type SubjectDB = {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const Instructors = () => {
+  // State hooks for selected subject and search term
   const [subj, setSubj] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>(''); 
+  // Using SWR to fetch data from the API
   const { data, error, isLoading } = useSWR('/api/get_instructors', fetcher);
-
+  // Handling loading and error states
   if (isLoading) return <Spinner size="xl" colorScheme="blue" />;
   if (error) return <Heading>Error Ocurred</Heading>;
   const inData: SubjectDB[] = data.data;
+  // Filtering the data based on the selected subject
   const filtered = inData.filter((i: SubjectDB) => {
     return subj === null || i.subject === subj;
   });
   console.log(filtered);
+   // Creating a list of unique subjects for the dropdown
   const subjectFilters = Array.from(new Set(inData.map((i) => i.subject)));
   return (
     <Flex
